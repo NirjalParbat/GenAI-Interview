@@ -13,6 +13,10 @@ export const router = createBrowserRouter([
         element:<Register/>
     },
     {
+ path: "/",
+        element:<h1>Homepage</h1>
+    },
+    {
         path: "*",
         element: <h1>404!! Page Not Found</h1>
     }
