@@ -1,0 +1,27 @@
+.button {
+    width: 100%;
+    padding-inline: 1.5rem;
+    padding-block: 0.75rem;
+    margin-bottom: 0.5rem;
+    border-radius: 1rem;
+    border: none;
+    outline: none;
+    font-size: 1rem;
+    background: #5a5858;
+    color: whitesmoke;
+    cursor: pointer;
+     display: flex;
+    justify-content: center;
+    align-items: center;
+transition: all 0.3s ease-in-out;
+
+
+    &.primary-button {
+        background: #01ddff9d;
+
+     
+        &:active {
+            scale: 1.1;
+        }
+    }
+}
