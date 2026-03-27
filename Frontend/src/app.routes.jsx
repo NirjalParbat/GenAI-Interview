@@ -14,7 +14,11 @@ export const router = createBrowserRouter([
   },
   {
     path: "/",
-    element: <Protected><h1>Homepage</h1></Protected>,
+    element: (
+      <Protected>
+        <h1>Homepage</h1>
+      </Protected>
+    ),
   },
   {
     path: "*",

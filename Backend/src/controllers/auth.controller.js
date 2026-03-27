@@ -1,7 +1,7 @@
-const userModel = require("../models/user.model")
-const bcrypt = require('bcryptjs')
-const jwt = require('jsonwebtoken')
-const tokenBlacklistModel = require("../models/blacklist.model")
+const userModel = require("../models/user.model");
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
+const tokenBlacklistModel = require("../models/blacklist.model");
 
 /**
  * @name registerUserController
@@ -10,54 +10,55 @@ const tokenBlacklistModel = require("../models/blacklist.model")
  */
 
 async function registerUserController(req, res) {
-    const {username, email, password} = req.body
+  const { username, email, password } = req.body;
 
-    if(!username || !email || !password) {
-        return res.status(400).json({
-           message: "Please Provide Username, email, and Password"
-        })
-    }
-
-    //returns user with same username or email
-    //It should not necessarily be same username or email
-const isUserAlreadyExists = await userModel.findOne({
-    $or:[{username}, {email}]
-})
-
-if(isUserAlreadyExists){
+  if (!username || !email || !password) {
     return res.status(400).json({
-        message: 'Account already exists with this email address or username'
-    })
-}
+      message: "Please Provide Username, email, and Password",
+    });
+  }
 
-const hash = await bcrypt.hash(password, 10)
+  //returns user with same username or email
+  //It should not necessarily be same username or email
+  const isUserAlreadyExists = await userModel.findOne({
+    $or: [{ username }, { email }],
+  });
 
-const user = await userModel.create({
+  if (isUserAlreadyExists) {
+    return res.status(400).json({
+      message: "Account already exists with this email address or username",
+    });
+  }
+
+  const hash = await bcrypt.hash(password, 10);
+
+  const user = await userModel.create({
     username,
     email,
-    password: hash
-})
+    password: hash,
+  });
 
-const token = jwt.sign({
-    id:user._id,
-    username: user.username
-},
- process.env.JWT_SECRET,
-  {
-    expiresIn:"1d"
-})
+  const token = jwt.sign(
+    {
+      id: user._id,
+      username: user.username,
+    },
+    process.env.JWT_SECRET,
+    {
+      expiresIn: "1d",
+    },
+  );
 
-res.cookie("token", token)
+  res.cookie("token", token);
 
-res.status(201).json({
+  res.status(201).json({
     message: "User Registered Successfully",
     user: {
-        id:user._id,
-        username: user.username,
-        email: user.email
-    }
-})
-
+      id: user._id,
+      username: user.username,
+      email: user.email,
+    },
+  });
 }
 
 /**
@@ -67,47 +68,45 @@ res.status(201).json({
  */
 
 async function loginUserController(req, res) {
+  const { email, password } = req.body;
 
-    const {email , password} = req.body
+  const user = await userModel.findOne({ email });
 
-    const user = await userModel.findOne({email})
+  if (!user) {
+    return res.status(400).json({
+      message: "Invalid Email or Password",
+    });
+  }
 
-    if(!user){
-        return res.status(400).json({
-            message: "Invalid Email or Password"
-        })
-    }
+  const isPasswordValid = await bcrypt.compare(password, user.password);
 
-    const isPasswordValid = await bcrypt.compare(password, user.password)
+  if (!isPasswordValid) {
+    return res.status(400).json({
+      message: "Invalid Email or Password",
+    });
+  }
 
-    if(!isPasswordValid){
-        return res.status(400).json({
-            message: "Invalid Email or Password"
-        })
-    }
+  const token = jwt.sign(
+    {
+      id: user._id,
+      username: user.username,
+    },
+    process.env.JWT_SECRET,
+    {
+      expiresIn: "1d",
+    },
+  );
 
+  res.cookie("token", token);
 
-    const token = jwt.sign({
-    id:user._id,
-    username: user.username
-},
- process.env.JWT_SECRET,
-  {
-    expiresIn:"1d"
-})
-
-
-res.cookie("token", token)
-
-res.status(200).json({
-    message: 'User LoggedIn Successfully',
+  res.status(200).json({
+    message: "User LoggedIn Successfully",
     user: {
-        id: user._id,
-        username:user.username,
-        email:user.email
-    }
-})
-
+      id: user._id,
+      username: user.username,
+      email: user.email,
+    },
+  });
 }
 
 /**
@@ -117,19 +116,18 @@ res.status(200).json({
  */
 
 async function logoutUserController(req, res) {
-    const token = req.cookies.token
+  const token = req.cookies.token;
 
-    if(token){
-        await tokenBlacklistModel.create({token})
-    }
+  if (token) {
+    await tokenBlacklistModel.create({ token });
+  }
 
-    res.clearCookie("token")
+  res.clearCookie("token");
 
-    res.status(200).json({
-        message: "User LoggedOut Successfully"
-    })
+  res.status(200).json({
+    message: "User LoggedOut Successfully",
+  });
 }
-
 
 /**
  * @name getMeController
@@ -137,19 +135,22 @@ async function logoutUserController(req, res) {
  * @access Private
  */
 
-
 async function getMeController(req, res) {
-    const user = await userModel.findById(req.user.id)
+  const user = await userModel.findById(req.user.id);
 
-        res.status(200).json({
-            message: 'User Details Fetched Successfully',
-            user:{
-                id: user._id,
-                username: user.username,
-                email: user.email
-            }
-        })
-    
+  res.status(200).json({
+    message: "User Details Fetched Successfully",
+    user: {
+      id: user._id,
+      username: user.username,
+      email: user.email,
+    },
+  });
 }
 
-module.exports = {registerUserController, loginUserController, logoutUserController, getMeController }
+module.exports = {
+  registerUserController,
+  loginUserController,
+  logoutUserController,
+  getMeController,
+};
